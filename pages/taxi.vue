@@ -6,6 +6,7 @@ import {
   getPlace,
   calculateRoute,
 } from "../services/locationService";
+import convertTime from "../utils/convertTime";
 import { ref } from "vue";
 let client;
 
@@ -100,7 +101,10 @@ const calculateFare = async () => {
     // steps are also available in response
     duration.value = response.Summary.DurationSeconds.toFixed(2);
 
-    const [dayFareCost, nightFareCost] = getTaxiFare(distance.value);
+    const [dayFareCost, nightFareCost] = getTaxiFare(
+      distance.value,
+      duration.value
+    );
     dayFare.value = dayFareCost;
     nightFare.value = nightFareCost;
   } catch (error) {
@@ -141,14 +145,29 @@ const calculateFare = async () => {
       <Button label="Enviar" @click="calculateFare" />
     </div>
 
-    <p>Coordinadas A {{ originCoordinates }}</p>
-    <p>Coordinadas B {{ destinationCoordinates }}</p>
+    <p>fake texts</p>
+    <p>Central de Autobuses de Monterrey</p>
+    <p>Avenida de la Primavera 1517</p>
 
-    <p>Distancia: {{ distance }}</p>
-    <p>Duracion: {{ duration }}</p>
+    <!-- <p>Coordinadas A {{ originCoordinates }}</p>
+    <p>Coordinadas B {{ destinationCoordinates }}</p> -->
 
-    Costo:
-    <p>Durante el dia: ${{ dayFare }}</p>
-    <p>Durante la noche: ${{ nightFare }}</p>
+    <p></p>
+
+    <Panel header="Header">
+      <p class="m-0">
+        <i class="pi pi-map-marker"></i> Distancia: {{ distance }}km
+      </p>
+      <p class="m-0">
+        <i class="pi pi-stopwatch"></i> Duracion: {{ convertTime(duration) }}
+      </p>
+      <p class="m-0"><i class="pi pi-money-bill"></i> Costo</p>
+      <p class="m-0">
+        <i class="pi pi-sun"></i> Durante el dia: ${{ dayFare }}
+      </p>
+      <p class="m-0">
+        <i class="pi pi-moon"></i> Durante la noche: ${{ nightFare }}
+      </p>
+    </Panel>
   </div>
 </template>

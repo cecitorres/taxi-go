@@ -25,11 +25,14 @@ export async function initializeLocationClient() {
         throw error;
     }
 }
+const NUEVO_LEON_COORDS = [-100.6689, 24.4389, -99.7383, 25.6955]
 
 const searchPlaceForSuggestions = async (text, client) => {
     const input = {
         IndexName: "TaxiGo", // required
-        Text: text, // required
+        Text: text, // required,
+        // FilterCountries: ["MEX"],
+        FilterBBox: NUEVO_LEON_COORDS
     };
     const command = new SearchPlaceIndexForSuggestionsCommand(input);
 
