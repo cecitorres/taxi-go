@@ -8,30 +8,37 @@ import {
     GetPlaceCommand,
     CalculateRouteCommand,
 } from "@aws-sdk/client-location";
+
+// Amazon Location Service resource names:
+const placesName = "TaxiGo";
+const region = "us-east-1";
+
 export async function initializeLocationClient() {
-    const runtimeConfig = useRuntimeConfig();
     try {
-        const authHelper = await withAPIKey(
-            runtimeConfig.public.AWS_LOCATION_SERVICE_KEY
-        );
+        const runtimeConfig = useRuntimeConfig();
+        const apiKey = runtimeConfig.public.AWS_LOCATION_SERVICE_KEY;
+        const authHelper = await withAPIKey(apiKey);
 
         const client = new LocationClient({
-            region: "us-east-1",
+            region,
             ...authHelper.getLocationClientConfig(), // sets up the Location client to use the API Key defined above
         });
+        
         return client;
     } catch (error) {
         console.error("Error initializing Location client:", error);
         throw error;
     }
 }
-const NUEVO_LEON_COORDS = [-100.6689, 24.4389, -99.7383, 25.6955]
+const NUEVO_LEON_COORDS = [-100.6689, 24.4389, -99.7383, 25.6955];
+const MONTERREY_MX_COORDS = [-100.3175, 25.6856]
 
 const searchPlaceForSuggestions = async (text, client) => {
     const input = {
-        IndexName: "TaxiGo", // required
+        IndexName: placesName, // required
         Text: text, // required,
         FilterCountries: ["MEX"],
+        BiasPosition: MONTERREY_MX_COORDS,
         // FilterBBox: NUEVO_LEON_COORDS
     };
     const command = new SearchPlaceIndexForSuggestionsCommand(input);
@@ -45,7 +52,7 @@ const searchPlaceForSuggestions = async (text, client) => {
 const searchPlaceForText = async (text, client) => {
     try {
         const input = {
-            IndexName: "TaxiGo", // required
+            IndexName: placesName, // required
             Text: text, // required
         };
         const command = new SearchPlaceIndexForTextCommand(input);
@@ -62,7 +69,7 @@ const searchPlaceForText = async (text, client) => {
 const getPlace = async (placeId, client) => {
     try {
         const input = {
-            IndexName: "TaxiGo", // required
+            IndexName: placesName, // required
             PlaceId: placeId, // required
         };
         const command = new GetPlaceCommand(input);
@@ -79,9 +86,10 @@ const getPlace = async (placeId, client) => {
 const calculateRoute = async (origin, destination, client) => {
     try {
         const input = {
-            CalculatorName: "TaxiGo", // required
+            CalculatorName: placesName, // required
             DestinationPosition: destination,
-            DeparturePosition: origin
+            DeparturePosition: origin,
+            IncludeLegGeometry: true,
         };
         const command = new CalculateRouteCommand(input);
 

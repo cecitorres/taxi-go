@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.11.4",
+    "maplibre-gl": "^4.1.2",
     "nuxt-primevue": "^0.3.1",
     "primeicons": "^7.0.0"
   }

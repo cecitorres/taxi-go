@@ -1,4 +1,5 @@
 <script setup>
+import "maplibre-gl/dist/maplibre-gl.css";
 import { getTaxiFare } from "../services/faresService";
 import {
   initializeLocationClient,
@@ -7,8 +8,27 @@ import {
   calculateRoute,
 } from "../services/locationService";
 import convertTime from "../utils/convertTime";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import maplibregl from "maplibre-gl";
+
 let client;
+let map;
+const mapName = "TaxiGo";
+const region = "us-east-1";
+const runtimeConfig = useRuntimeConfig();
+const apiKey = runtimeConfig.public.AWS_LOCATION_SERVICE_KEY;
+
+onMounted(() => {
+  // Initialize the map
+  map = new maplibregl.Map({
+    container: "map",
+    center: [-100.3175, 25.6856],
+    zoom: 14, // initial map zoom
+    style: `https://maps.geo.${region}.amazonaws.com/maps/v0/maps/${mapName}/style-descriptor?key=${apiKey}`,
+  });
+  map.addControl(new maplibregl.NavigationControl());
+  // console.log(map);
+});
 
 async function initialize() {
   //initialize the Location client:
@@ -41,7 +61,6 @@ const onOriginSelect = async (event) => {
     const response = await getPlace(placeId, client);
     // Procesar placeInfo para obtener las coordenadas
     originCoordinates.value = response.Place.Geometry.Point;
-    console.log("Coordenadas del lugar:", originCoordinates.value);
   } catch (error) {
     console.error("Error getting place coordinates:", error);
     // Manejar errores de obtención de coordenadas del lugar
@@ -74,7 +93,6 @@ const onDestinationSelect = async (event) => {
     const response = await getPlace(placeId, client);
     // Procesar placeInfo para obtener las coordenadas
     destinationCoordinates.value = response.Place.Geometry.Point;
-    console.log("Coordenadas del lugar:", destinationCoordinates.value);
   } catch (error) {
     console.error("Error getting place coordinates:", error);
     // Manejar errores de obtención de coordenadas del lugar
@@ -96,7 +114,6 @@ const calculateFare = async () => {
       destinationCoordinates.value,
       client
     );
-    console.log(response);
     distance.value = response.Summary.Distance.toFixed(2);
     // steps are also available in response
     duration.value = response.Summary.DurationSeconds.toFixed(2);
@@ -107,11 +124,48 @@ const calculateFare = async () => {
     );
     dayFare.value = dayFareCost;
     nightFare.value = nightFareCost;
+    drawRoute(response);
   } catch (error) {
     console.error("Error calculating for route:", error);
   } finally {
     loading.value = false;
   }
+};
+const drawRoute = (data) => {
+  let routes = data.Legs[0].Geometry.LineString;
+  map.addSource("route_sample", {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: routes,
+      },
+    },
+  });
+  map.addLayer({
+    id: "route_sample",
+    type: "line",
+    source: "route_sample",
+    layout: {
+      "line-join": "round",
+      "line-cap": "round",
+    },
+    paint: {
+      "line-color": "#FF0000",
+      "line-width": 3,
+      "line-opacity": 0.8,
+    },
+  });
+  // Calcular los límites de la ruta
+  let bounds = routes.reduce((bounds, coord) => {
+    return bounds.extend(coord);
+  }, new maplibregl.LngLatBounds(routes[0], routes[0]));
+
+  // Ajustar el mapa para que se ajuste a los límites de la ruta
+  map.fitBounds(bounds, { padding: 20 }); // Puedes ajustar el padding según sea necesario
+  // map.redraw();
 };
 </script>
 
@@ -152,6 +206,9 @@ const calculateFare = async () => {
     <div class="flex items-center justify-center">
       <Button label="Calcular" @click="calculateFare" :loading="loading" />
     </div>
+    <div class="my-4">
+      <div id="map"></div>
+    </div>
   </div>
 
   <!-- <p>fake texts</p>
@@ -181,3 +238,8 @@ const calculateFare = async () => {
     </Panel>
   </div>
 </template>
+<style scoped>
+#map {
+  height: 30vh;
+}
+</style>
