@@ -1,4 +1,3 @@
-// TODO: Add time costs
 const FARES = {
     DAY: {
         BASE: 8.78,
@@ -30,7 +29,7 @@ const calculateTaxiFare = (distance, baseFare, ratePerKm, timeRate, duration) =>
 
     // Agregar el costo adicional por tiempo de traslado al costo total
     const totalCost = distanceCost + timeCost;
-    console.log("calculateTaxiFare ", distanceCost, timeCost);
+
     return totalCost;
 };
 

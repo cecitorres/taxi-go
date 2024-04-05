@@ -31,8 +31,8 @@ const searchPlaceForSuggestions = async (text, client) => {
     const input = {
         IndexName: "TaxiGo", // required
         Text: text, // required,
-        // FilterCountries: ["MEX"],
-        FilterBBox: NUEVO_LEON_COORDS
+        FilterCountries: ["MEX"],
+        // FilterBBox: NUEVO_LEON_COORDS
     };
     const command = new SearchPlaceIndexForSuggestionsCommand(input);
 

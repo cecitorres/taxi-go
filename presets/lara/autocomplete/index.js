@@ -7,7 +7,7 @@ export default {
             'inline-flex',
 
             // Size
-            { 'w-full': props.multiple },
+            'w-full',
 
             // Color
             'text-surface-900 dark:text-surface-0',
@@ -74,7 +74,7 @@ export default {
             { 'outline-none shadow-none rounded-none': props.multiple },
 
             // Size
-            { 'w-full': props.multiple },
+            'w-full',
 
             // Spacing
             'm-0',

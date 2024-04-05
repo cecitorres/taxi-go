@@ -116,10 +116,10 @@ const calculateFare = async () => {
 </script>
 
 <template>
-  <div class="p-4 mx-auto text-center border">
+  <div class="px-8 pt-6 pb-8 mb-4 bg-white rounded shadow-md">
     <p class="text-2xl">Calcule su tarifa de taxi</p>
     <div class="mb-4">
-      <label class="block mb-2 text-sm font-bold text-gray-700" for="username">
+      <label class="block mb-2 font-bold text-gray-700 text-md" for="username">
         Punto de partida
       </label>
       <AutoComplete
@@ -128,48 +128,50 @@ const calculateFare = async () => {
         :suggestions="originSuggestionsText"
         @complete="onOriginSearch"
         @item-select="onOriginSelect"
+        placeholder="Centro de Monterrey ..."
         forceSelection
-      />
-      <input
-        class="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-        id="username"
-        type="text"
-        placeholder="Username"
       />
     </div>
 
-    <div class="flex justify-center card">
-      <label for="destinationInput">Punto de llegada </label>
+    <div class="mb-4">
+      <label
+        class="block mb-2 font-bold text-gray-700 text-md"
+        for="destinationInput"
+        >Punto de llegada
+      </label>
       <AutoComplete
         input-id="destinationInput"
         v-model="destinationInput"
         :suggestions="destinationSuggestionsText"
         @complete="destinationSearch"
         @item-select="onDestinationSelect"
+        placeholder="Centro de Guadalupe ..."
         forceSelection
       />
     </div>
-    <div class="flex justify-center card">
-      <Button label="Enviar" @click="calculateFare" :loading="loading" />
+    <div class="flex items-center justify-center">
+      <Button label="Calcular" @click="calculateFare" :loading="loading" />
     </div>
+  </div>
 
-    <p>fake texts</p>
+  <!-- <p>fake texts</p>
     <p>Central de Autobuses de Monterrey</p>
-    <p>Avenida de la Primavera 1517</p>
+    <p>Avenida de la Primavera 1517</p> -->
 
-    <!-- <p>Coordinadas A {{ originCoordinates }}</p>
+  <!-- <p>Coordinadas A {{ originCoordinates }}</p>
     <p>Coordinadas B {{ destinationCoordinates }}</p> -->
 
-    <p></p>
-
+  <div class="px-8 pt-6 pb-8 mb-4 bg-white rounded shadow-md">
     <Panel header="Header">
+      <template #header>
+        <p class="font-bold"><i class="pi pi-money-bill"></i> Costo</p>
+      </template>
       <p class="m-0">
         <i class="pi pi-map-marker"></i> Distancia: {{ distance }}km
       </p>
       <p class="m-0">
         <i class="pi pi-stopwatch"></i> Duracion: {{ convertTime(duration) }}
       </p>
-      <p class="m-0"><i class="pi pi-money-bill"></i> Costo</p>
       <p class="m-0">
         <i class="pi pi-sun"></i> Durante el dia: ${{ dayFare }}
       </p>
