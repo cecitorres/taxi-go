@@ -27,6 +27,7 @@ jobs:
           npm run generate
         env:
           NUXT_APP_BASE_URL: ${{ vars.NUXT_APP_BASE_URL  }}
+          NUXT_AWS_LOCATION_SERVICE: ${{ secrets.NUXT_AWS_LOCATION_SERVICE }}
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4

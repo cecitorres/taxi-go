@@ -27,7 +27,37 @@ onMounted(() => {
     style: `https://maps.geo.${region}.amazonaws.com/maps/v0/maps/${mapName}/style-descriptor?key=${apiKey}`,
   });
   map.addControl(new maplibregl.NavigationControl());
-  // console.log(map);
+
+  // Add the source and layer for the initial route
+  // Event listener for style load
+  map.on("load", () => {
+    map.addSource("route_sample", {
+      type: "geojson",
+      data: {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: [], // Initially empty
+        },
+      },
+    });
+
+    map.addLayer({
+      id: "route_sample",
+      type: "line",
+      source: "route_sample",
+      layout: {
+        "line-join": "round",
+        "line-cap": "round",
+      },
+      paint: {
+        "line-color": "#FF0000",
+        "line-width": 5,
+        "line-opacity": 0.5,
+      },
+    });
+  });
 });
 
 async function initialize() {
@@ -132,30 +162,16 @@ const calculateFare = async () => {
   }
 };
 const drawRoute = (data) => {
+  // Obtener las coordenadas de la nueva ruta
   let routes = data.Legs[0].Geometry.LineString;
-  map.addSource("route_sample", {
-    type: "geojson",
-    data: {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        type: "LineString",
-        coordinates: routes,
-      },
-    },
-  });
-  map.addLayer({
-    id: "route_sample",
-    type: "line",
-    source: "route_sample",
-    layout: {
-      "line-join": "round",
-      "line-cap": "round",
-    },
-    paint: {
-      "line-color": "#FF0000",
-      "line-width": 3,
-      "line-opacity": 0.8,
+
+  // Actualizar los datos de la fuente existente con los datos de la nueva ruta
+  map.getSource("route_sample").setData({
+    type: "Feature",
+    properties: {},
+    geometry: {
+      type: "LineString",
+      coordinates: routes,
     },
   });
   // Calcular los límites de la ruta
@@ -165,7 +181,6 @@ const drawRoute = (data) => {
 
   // Ajustar el mapa para que se ajuste a los límites de la ruta
   map.fitBounds(bounds, { padding: 20 }); // Puedes ajustar el padding según sea necesario
-  // map.redraw();
 };
 </script>
 
