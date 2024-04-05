@@ -116,10 +116,12 @@ const calculateFare = async () => {
 </script>
 
 <template>
-  <div class="w-1/2 p-4 mx-auto text-center border">
-    <p>Calculemos el costo de un viaje en taxi del punto A al punto B</p>
-    <div class="card flex justify-center">
-      <label for="originInput">Punto de partida </label>
+  <div class="p-4 mx-auto text-center border">
+    <p class="text-2xl">Calcule su tarifa de taxi</p>
+    <div class="mb-4">
+      <label class="block mb-2 text-sm font-bold text-gray-700" for="username">
+        Punto de partida
+      </label>
       <AutoComplete
         input-id="originInput"
         v-model="originInput"
@@ -128,9 +130,15 @@ const calculateFare = async () => {
         @item-select="onOriginSelect"
         forceSelection
       />
+      <input
+        class="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
+        id="username"
+        type="text"
+        placeholder="Username"
+      />
     </div>
 
-    <div class="card flex justify-center">
+    <div class="flex justify-center card">
       <label for="destinationInput">Punto de llegada </label>
       <AutoComplete
         input-id="destinationInput"
@@ -141,8 +149,8 @@ const calculateFare = async () => {
         forceSelection
       />
     </div>
-    <div class="card flex justify-center">
-      <Button label="Enviar" @click="calculateFare" />
+    <div class="flex justify-center card">
+      <Button label="Enviar" @click="calculateFare" :loading="loading" />
     </div>
 
     <p>fake texts</p>

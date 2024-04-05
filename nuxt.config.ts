@@ -3,11 +3,17 @@ import path from "node:path";
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  modules: ["nuxt-primevue"],
-  primevue: {},
+  modules: ["nuxt-primevue", "@nuxtjs/tailwindcss"],
+  primevue: {
+    options: {
+      unstyled: true,
+    },
+    importPT: { from: path.resolve(__dirname, "./presets/lara/") },
+  },
 
   css: [
-    "primevue/resources/themes/aura-light-green/theme.css",
+    // "primevue/resources/themes/aura-light-blue/theme.css",
+    "~/assets/css/base.css",
     "primeicons/primeicons.css",
   ],
   runtimeConfig: {
