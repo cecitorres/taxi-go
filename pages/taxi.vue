@@ -74,9 +74,8 @@ const getCurrentLocation = async () => {
       const lon = position.coords.longitude;
       originInput.value = "Mi ubicacion";
       originCoordinates.value = [lat, lon];
-      console.log(lat, lon);
       // Hardcode coords for fake position
-      originCoordinates.value = [-100.1865, 25.6718];
+      // originCoordinates.value = [-100.1865, 25.6718];
     } catch (err) {
       console.log(err);
     } finally {
@@ -215,6 +214,40 @@ const drawRoute = (data) => {
   // Ajustar el mapa para que se ajuste a los límites de la ruta
   map.fitBounds(bounds, { padding: 20 }); // Puedes ajustar el padding según sea necesario
 };
+const getAutoCompleteComponent = (refName) => {
+  return eval(refName);
+};
+const destinationRef = ref(null);
+const startSpeechRecognition = () => {
+  const autoCompleteComponent = getAutoCompleteComponent("destinationRef");
+
+  const recognition = new window.webkitSpeechRecognition();
+  recognition.lang = "es-ES";
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    destinationInput.value = transcript;
+    
+    // Simular el evento 'complete' con el texto transcrita como consulta
+    autoCompleteComponent.value.$emit("complete", {
+      query: transcript,
+    });
+    autoCompleteComponent.value.clicked = true;
+    autoCompleteComponent.value.focused = true;
+    // Mostrar sugerencias
+    autoCompleteComponent.value.overlayVisible = true;
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Error de reconocimiento:", event.error);
+  };
+
+  recognition.onend = () => {
+    console.log("Reconocimiento de voz finalizado");
+  };
+
+  recognition.start();
+};
 </script>
 
 <template>
@@ -224,16 +257,26 @@ const drawRoute = (data) => {
       <label class="block mb-2 font-bold text-gray-700 text-md" for="username">
         Punto de partida
       </label>
-      <AutoComplete
-        input-id="originInput"
-        v-model="originInput"
-        :suggestions="originSuggestionsText"
-        @complete="onOriginSearch"
-        @item-select="onOriginSelect"
-        placeholder="Centro de Monterrey ..."
-        forceSelection
-        :disabled="loadingCurrentLocation"
-      />
+      <div class="flex">
+        <AutoComplete
+          input-id="originInput"
+          v-model="originInput"
+          :suggestions="originSuggestionsText"
+          @complete="onOriginSearch"
+          @item-select="onOriginSelect"
+          placeholder="Centro de Monterrey ..."
+          forceSelection
+          :disabled="loadingCurrentLocation"
+          class="flex-1 mr-2"
+        />
+
+        <Button
+          @click="getCurrentLocation"
+          :loading="loadingCurrentLocation"
+          icon="pi pi-map-marker"
+          severity="danger"
+        />
+      </div>
     </div>
 
     <div class="mb-4">
@@ -242,23 +285,26 @@ const drawRoute = (data) => {
         for="destinationInput"
         >Punto de llegada
       </label>
-      <AutoComplete
-        input-id="destinationInput"
-        v-model="destinationInput"
-        :suggestions="destinationSuggestionsText"
-        @complete="destinationSearch"
-        @item-select="onDestinationSelect"
-        placeholder="Centro de Guadalupe ..."
-        forceSelection
-      />
+      <div class="flex">
+        <AutoComplete
+          input-id="destinationInput"
+          v-model="destinationInput"
+          :suggestions="destinationSuggestionsText"
+          @complete="destinationSearch"
+          @item-select="onDestinationSelect"
+          placeholder="Centro de Guadalupe ..."
+          forceSelection
+          class="flex-1 mr-2"
+          ref="destinationRef"
+        />
+        <Button
+          @click="startSpeechRecognition"
+          icon="pi pi-microphone"
+          severity="warning"
+        ></Button>
+      </div>
     </div>
     <div class="flex items-center justify-around">
-      <Button
-        label="Ubicacion actual"
-        @click="getCurrentLocation"
-        :loading="loadingCurrentLocation"
-        severity="danger"
-      />
       <Button label="Limpiar" @click="resetValues" outlined="" />
       <Button label="Calcular" @click="calculateFare" :loading="loading" />
     </div>
@@ -266,13 +312,6 @@ const drawRoute = (data) => {
       <div id="map"></div>
     </div>
   </div>
-
-  <!-- <p>fake texts</p>
-    <p>Central de Autobuses de Monterrey</p>
-    <p>Avenida de la Primavera 1517</p> -->
-
-  <!-- <p>Coordinadas A {{ originCoordinates }}</p>
-    <p>Coordinadas B {{ destinationCoordinates }}</p> -->
 
   <div class="px-8 pt-6 pb-8 mb-4 bg-white rounded shadow-md">
     <Panel header="Header">
