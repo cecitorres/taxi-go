@@ -10,6 +10,7 @@ import {
 import convertTime from "../utils/convertTime";
 import { ref, onMounted } from "vue";
 import maplibregl from "maplibre-gl";
+import getCurrentPosition from "../utils/location";
 
 let client;
 let map;
@@ -18,7 +19,10 @@ const region = "us-east-1";
 const runtimeConfig = useRuntimeConfig();
 const apiKey = runtimeConfig.public.AWS_LOCATION_SERVICE_KEY;
 
-onMounted(() => {
+const loadingCurrentLocation = ref(false);
+onMounted(async () => {
+  //initialize the Location client:
+  client = await initializeLocationClient();
   // Initialize the map
   map = new maplibregl.Map({
     container: "map",
@@ -60,11 +64,40 @@ onMounted(() => {
   });
 });
 
-async function initialize() {
-  //initialize the Location client:
-  client = await initializeLocationClient();
-}
-initialize();
+const getCurrentLocation = async () => {
+  // GPS location
+  if ("geolocation" in navigator) {
+    try {
+      loadingCurrentLocation.value = true;
+      const position = await getCurrentPosition();
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      originInput.value = "Mi ubicacion";
+      originCoordinates.value = [lat, lon];
+      console.log(lat, lon);
+      // Hardcode coords for fake position
+      originCoordinates.value = [-100.1865, 25.6718];
+    } catch (err) {
+      console.log(err);
+    } finally {
+      loadingCurrentLocation.value = false;
+    }
+  } else {
+    // TODO: Add toast to show error
+  }
+};
+
+const resetValues = () => {
+  originInput.value = "";
+  originSuggestionsResult.value = [];
+  originSuggestionsText.value = [];
+  originCoordinates.value = [];
+  destinationInput.value = "";
+  destinationSuggestionsResult.value = [];
+  destinationSuggestionsText.value = [];
+  destinationCoordinates.value = [];
+};
+
 const originInput = ref("");
 const originSuggestionsResult = ref([]);
 const originSuggestionsText = ref([]);
@@ -199,6 +232,7 @@ const drawRoute = (data) => {
         @item-select="onOriginSelect"
         placeholder="Centro de Monterrey ..."
         forceSelection
+        :disabled="loadingCurrentLocation"
       />
     </div>
 
@@ -218,7 +252,14 @@ const drawRoute = (data) => {
         forceSelection
       />
     </div>
-    <div class="flex items-center justify-center">
+    <div class="flex items-center justify-around">
+      <Button
+        label="Ubicacion actual"
+        @click="getCurrentLocation"
+        :loading="loadingCurrentLocation"
+        severity="danger"
+      />
+      <Button label="Limpiar" @click="resetValues" outlined="" />
       <Button label="Calcular" @click="calculateFare" :loading="loading" />
     </div>
     <div class="my-4">
