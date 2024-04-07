@@ -4,6 +4,7 @@ import { getTaxiFare } from "../services/faresService";
 import {
   initializeLocationClient,
   searchPlaceForSuggestions,
+  searchPlaceForText,
   getPlace,
   calculateRoute,
 } from "../services/locationService";
@@ -161,6 +162,18 @@ const onDestinationSelect = async (event) => {
   }
 };
 
+const searchByVoice = async () => {
+  try {
+    const response = await searchPlaceForText(destinationInput.value, client);
+    console.log(response);
+    const firstResult = response.Results[0].Place;
+    destinationCoordinates.value = firstResult.Geometry.Point;
+    destinationInput.value = firstResult.Label;
+  } catch (error) {
+    console.error("Error searching for place:", error);
+  }
+};
+
 const loading = ref(false);
 const distance = ref(0);
 const duration = ref(0);
@@ -227,15 +240,15 @@ const startSpeechRecognition = () => {
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
     destinationInput.value = transcript;
-    
-    // Simular el evento 'complete' con el texto transcrita como consulta
-    autoCompleteComponent.value.$emit("complete", {
-      query: transcript,
-    });
-    autoCompleteComponent.value.clicked = true;
-    autoCompleteComponent.value.focused = true;
-    // Mostrar sugerencias
-    autoCompleteComponent.value.overlayVisible = true;
+    searchByVoice();
+    // // Simular el evento 'complete' con el texto transcrita como consulta
+    // autoCompleteComponent.value.$emit("complete", {
+    //   query: transcript,
+    // });
+    // autoCompleteComponent.value.clicked = true;
+    // autoCompleteComponent.value.focused = true;
+    // // Mostrar sugerencias
+    // autoCompleteComponent.value.overlayVisible = true;
   };
 
   recognition.onerror = (event) => {
