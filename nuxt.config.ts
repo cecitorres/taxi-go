@@ -19,6 +19,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       AWS_LOCATION_SERVICE_KEY: process.env.NUXT_AWS_LOCATION_SERVICE,
+      MAP_NAME: process.env.NUXT_MAP_NAME,
+      AWS_REGION: process.env.NUXT_AWS_REGION,
     },
   },
 });

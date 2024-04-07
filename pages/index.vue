@@ -1,6 +1,5 @@
 <script setup>
-import "maplibre-gl/dist/maplibre-gl.css";
-import { getTaxiFare } from "../services/faresService";
+import { ref, onMounted } from "vue";
 import {
   initializeLocationClient,
   searchPlaceForSuggestions,
@@ -8,13 +7,11 @@ import {
   getPlace,
   calculateRoute,
 } from "../services/locationService";
+import { getTaxiFare } from "../services/faresService";
 import convertTime from "../utils/convertTime";
-import { ref, onMounted } from "vue";
-import maplibregl from "maplibre-gl";
 import getCurrentPosition from "../utils/location";
 
 let client;
-let map;
 const mapName = "TaxiGo";
 const region = "us-east-1";
 const runtimeConfig = useRuntimeConfig();
@@ -24,45 +21,6 @@ const loadingCurrentLocation = ref(false);
 onMounted(async () => {
   //initialize the Location client:
   client = await initializeLocationClient();
-  // Initialize the map
-  map = new maplibregl.Map({
-    container: "map",
-    center: [-100.3175, 25.6856],
-    zoom: 14, // initial map zoom
-    style: `https://maps.geo.${region}.amazonaws.com/maps/v0/maps/${mapName}/style-descriptor?key=${apiKey}`,
-  });
-  map.addControl(new maplibregl.NavigationControl());
-
-  // Add the source and layer for the initial route
-  // Event listener for style load
-  map.on("load", () => {
-    map.addSource("route_sample", {
-      type: "geojson",
-      data: {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: [], // Initially empty
-        },
-      },
-    });
-
-    map.addLayer({
-      id: "route_sample",
-      type: "line",
-      source: "route_sample",
-      layout: {
-        "line-join": "round",
-        "line-cap": "round",
-      },
-      paint: {
-        "line-color": "#FF0000",
-        "line-width": 5,
-        "line-opacity": 0.5,
-      },
-    });
-  });
 });
 
 const getCurrentLocation = async () => {
@@ -76,7 +34,7 @@ const getCurrentLocation = async () => {
       originInput.value = "Mi ubicacion";
       originCoordinates.value = [lat, lon];
       // Hardcode coords for fake position
-      originCoordinates.value = [-100.1865, 25.6718];
+      // originCoordinates.value = [-100.1865, 25.6718];
     } catch (err) {
       console.log(err);
     } finally {
@@ -161,6 +119,9 @@ const onDestinationSelect = async (event) => {
     // Manejar errores de obtención de coordenadas del lugar
   }
 };
+const getRef = (refName) => {
+  return eval(refName);
+};
 
 const searchByVoice = async () => {
   try {
@@ -181,6 +142,7 @@ const duration = ref(0);
 const dayFare = ref(0);
 const nightFare = ref(0);
 
+const mapRef = ref(null);
 const calculateFare = async () => {
   loading.value = true;
   try {
@@ -199,40 +161,19 @@ const calculateFare = async () => {
     );
     dayFare.value = dayFareCost;
     nightFare.value = nightFareCost;
-    drawRoute(response);
+    // Obtener las coordenadas de la nueva ruta
+    let routes = response.Legs[0].Geometry.LineString;
+
+    mapRef.value.drawRoute(routes);
   } catch (error) {
     console.error("Error calculating for route:", error);
   } finally {
     loading.value = false;
   }
 };
-const drawRoute = (data) => {
-  // Obtener las coordenadas de la nueva ruta
-  let routes = data.Legs[0].Geometry.LineString;
-
-  // Actualizar los datos de la fuente existente con los datos de la nueva ruta
-  map.getSource("route_sample").setData({
-    type: "Feature",
-    properties: {},
-    geometry: {
-      type: "LineString",
-      coordinates: routes,
-    },
-  });
-  // Calcular los límites de la ruta
-  let bounds = routes.reduce((bounds, coord) => {
-    return bounds.extend(coord);
-  }, new maplibregl.LngLatBounds(routes[0], routes[0]));
-
-  // Ajustar el mapa para que se ajuste a los límites de la ruta
-  map.fitBounds(bounds, { padding: 20 }); // Puedes ajustar el padding según sea necesario
-};
-const getAutoCompleteComponent = (refName) => {
-  return eval(refName);
-};
 const destinationRef = ref(null);
 const startSpeechRecognition = () => {
-  const autoCompleteComponent = getAutoCompleteComponent("destinationRef");
+  const autoCompleteComponent = getRef("destinationRef");
 
   const recognition = new window.webkitSpeechRecognition();
   recognition.lang = "es-ES";
@@ -322,7 +263,7 @@ const startSpeechRecognition = () => {
       <Button label="Calcular" @click="calculateFare" :loading="loading" />
     </div>
     <div class="my-4">
-      <div id="map"></div>
+      <Map ref="mapRef" />
     </div>
   </div>
 
@@ -346,8 +287,3 @@ const startSpeechRecognition = () => {
     </Panel>
   </div>
 </template>
-<style scoped>
-#map {
-  height: 30vh;
-}
-</style>
