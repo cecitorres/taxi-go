@@ -12,7 +12,7 @@ const destinationCoords = ref([]);
 const destinationAddress = ref("");
 const { getUserLocation } = useUserLocation();
 const {
-  loading,
+  loading: loadingTaxiFare,
   distance,
   duration,
   fareCost,
@@ -24,6 +24,7 @@ const showResult = ref(false);
 const startRef = ref();
 const resultRef = ref();
 const showScrollTop = ref(true);
+const loading = ref(false);
 
 // Calcular coordenadas inicio
 onMounted(async () => {
@@ -32,27 +33,43 @@ onMounted(async () => {
   originCoords.value = await getUserLocation();
   console.log(originCoords.value);
 });
-const onGetDestinationAddress = async () => {
-  // Obtener por voz la direccion destino
-  destinationAddress.value = await getTranscript();
-  // Calcular coordenadas destino,
-  const place = await searchPlaceForText(
-    destinationAddress.value,
-    client.value
-  );
-  destinationCoords.value = place.Geometry.Point;
-  destinationAddress.value = place.Label;
 
-  // Calcular ruta
-  // Calcular costos
-  await calculateTaxiFare(originCoords.value, destinationCoords.value);
-  // Draw Map
-  mapRef.value.drawRoute(routeString.value);
-  showResult.value = true;
-  showScrollTop.value = true;
-  await nextTick();
-  resultRef.value.scrollIntoView({ behavior: "smooth" });
+const onGetDestinationAddress = async () => {
+  try {
+    // Obtener por voz la direccion destino
+    destinationAddress.value = await getTranscript();
+    // Calcular coordenadas destino,
+    const place = await searchPlaceForText(
+      destinationAddress.value,
+      client.value
+    );
+    destinationCoords.value = place.Geometry.Point;
+    destinationAddress.value = place.Label;
+
+    loading.value = true;
+  } catch (error) {
+    console.log(error);
+  }
 };
+
+watch([originCoords, destinationCoords], async ([origin, destination]) => {
+  if (origin.length > 0 && destination.length > 0) {
+    try {
+      // Calcular ruta y costos
+      await calculateTaxiFare(originCoords.value, destinationCoords.value);
+      // Draw Map
+      mapRef.value.drawRoute(routeString.value);
+      showResult.value = true;
+      showScrollTop.value = true;
+      loading.value = false;
+      await nextTick();
+      resultRef.value.scrollIntoView({ behavior: "smooth" });
+    } catch (error) {
+      console.log(error);
+      loading.value = false;
+    }
+  }
+});
 
 const scrollTop = () => {
   startRef.value.scrollIntoView({ behavior: "smooth" });
@@ -62,6 +79,12 @@ const scrollTop = () => {
 
 <template>
   <div class="h-full pb-4">
+    <div
+      v-show="loading"
+      class="absolute z-10 flex items-center justify-center w-full h-full bg-white bg-opacity-60"
+    >
+      <ProgressSpinner />
+    </div>
     <div
       class="flex flex-col items-center justify-center h-screen"
       ref="startRef"
