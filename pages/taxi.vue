@@ -1,5 +1,18 @@
 <script setup>
+import { ref, onMounted } from "vue";
 
+const originCoordinates = ref()
+const { getUserLocation } = useUserLocation();
+// Calcular coordenadas inicio
+onMounted(async () => {
+  originCoordinates.value = await getUserLocation();
+  console.log(originCoordinates.value)
+})
+// Obtener por voz la direccion destino
+// Calcular coordenadas destino,
+
+// Calcular ruta
+// Calcular costos
 </script>
 
 <template>

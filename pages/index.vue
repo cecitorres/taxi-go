@@ -7,7 +7,6 @@ import {
 } from "../services/locationService";
 import { getTaxiFare } from "../services/faresService";
 import convertTime from "../utils/convertTime";
-import getCurrentPosition from "../utils/location";
 
 const client = ref();
 const runtimeConfig = useRuntimeConfig();
@@ -15,32 +14,17 @@ const apiKey = runtimeConfig.public.AWS_LOCATION_SERVICE_KEY;
 const mapName = runtimeConfig.public.MAP_NAME;
 const region = runtimeConfig.public.AWS_REGION;
 
-const loadingCurrentLocation = ref(false);
 onMounted(async () => {
-  //initialize the Location client:
+  // Initialize the AWS Location client
   client.value = await initializeLocationClient();
 });
 
+const { loading: loadingCurrentLocation, getUserLocation } = useUserLocation();
+
 const getCurrentLocation = async () => {
-  // GPS location
-  if ("geolocation" in navigator) {
-    try {
-      loadingCurrentLocation.value = true;
-      const position = await getCurrentPosition();
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      originInput.value = "Mi ubicacion";
-      originCoordinates.value = [lat, lon];
-      // Hardcode coords for fake position
-      // originCoordinates.value = [-100.1865, 25.6718];
-    } catch (err) {
-      console.log(err);
-    } finally {
-      loadingCurrentLocation.value = false;
-    }
-  } else {
-    // TODO: Add toast to show error
-  }
+  const coords = await getUserLocation();
+  originInput.value = "Mi ubicacion";
+  originCoordinates.value = coords;
 };
 
 const resetValues = () => {
