@@ -35,6 +35,7 @@ onMounted(async () => {
     // Initialize the AWS Location client
     client.value = await initializeLocationClient();
     originCoords.value = await getUserLocation();
+    console.log("originCoords.value ", originCoords.value);
   } catch (error) {
     addErrorToast(null, error.message);
   }
@@ -61,11 +62,11 @@ const onGetDestinationAddress = async () => {
 watch(
   [originCoords, destinationCoords],
   async ([origin, destination]) => {
-    try {
-      console.log(origin, destination);
-      if (origin.length > 0 && destination.length > 0) {
+    if (origin.length > 0 && destination.length > 0) {
+      try {
+        console.log(origin, destination);
         // Calcular ruta y costos
-        await calculateTaxiFare(originCoords.value, destinationCoords.value);
+        await calculateTaxiFare(origin, destination);
         // Draw Map
         mapRef.value.drawRoute(routeString.value);
         showResult.value = true;
@@ -73,13 +74,13 @@ watch(
         loading.value = false;
         await nextTick();
         resultRef.value.scrollIntoView({ behavior: "smooth" });
+      } catch (error) {
+        loading.value = false;
+        addErrorToast(null, error.message);
       }
-    } catch (error) {
-      loading.value = false;
-      addErrorToast(null, error.message);
     }
-  },
-  { deep: true }
+  }
+  // { deep: true }
 );
 
 const scrollTop = () => {

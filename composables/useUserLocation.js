@@ -21,6 +21,7 @@ export default function () {
                 const position = await getCurrentPosition();
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
+                return [lat, lon];
             } catch (err) {
                 throw Error("Error al obtener tu ubicacion");
             } finally {
