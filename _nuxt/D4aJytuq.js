@@ -1,1 +1,0 @@
-import o from"./D8rQSKC7.js";import{_ as r,v as e,z as n,t as c}from"./B81XN9vr.js";import"./C9Qgv8sD.js";import"./CSWJY2Jm.js";import"./D_BeqAwX.js";import"./6KpKXU1m.js";const i={};function p(s,a){const t=o;return c(),e("div",null,[n(t,{icon:"pi pi-microphone",severity:"warning"})])}const x=r(i,[["render",p]]);export{x as default};
