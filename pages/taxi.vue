@@ -58,24 +58,28 @@ const onGetDestinationAddress = async () => {
   }
 };
 
-watch([originCoords, destinationCoords], async ([origin, destination]) => {
-  if (origin?.length > 0 && destination?.length > 0) {
-    try {
-      // Calcular ruta y costos
-      await calculateTaxiFare(originCoords.value, destinationCoords.value);
-      // Draw Map
-      mapRef.value.drawRoute(routeString.value);
-      showResult.value = true;
-      showScrollTop.value = true;
-      loading.value = false;
-      await nextTick();
-      resultRef.value.scrollIntoView({ behavior: "smooth" });
-    } catch (error) {
-      loading.value = false;
-      addErrorToast(null, "Intente otra direccion");
+watch(
+  [originCoords, destinationCoords],
+  async ([origin, destination]) => {
+    if (origin?.length > 0 && destination?.length > 0) {
+      try {
+        // Calcular ruta y costos
+        await calculateTaxiFare(originCoords.value, destinationCoords.value);
+        // Draw Map
+        mapRef.value.drawRoute(routeString.value);
+        showResult.value = true;
+        showScrollTop.value = true;
+        loading.value = false;
+        await nextTick();
+        resultRef.value.scrollIntoView({ behavior: "smooth" });
+      } catch (error) {
+        loading.value = false;
+        addErrorToast(null, "Intente otra direccion");
+      }
     }
-  }
-});
+  },
+  { deep: true }
+);
 
 const scrollTop = () => {
   startRef.value.scrollIntoView({ behavior: "smooth" });
