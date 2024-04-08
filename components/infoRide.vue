@@ -1,8 +1,8 @@
 <template>
   <Panel header="Info Viaje" class="mx-3 text-lg text-left">
     <p class="flex justify-between m-0">
-      <span><i class="pi pi-map-marker"></i> Origen:</span
-      ><span> Mi ubicacion</span>
+      <span class="basis-1/2"><i class="pi pi-map-marker"></i> Origen:</span
+      ><span class="text-right basis-1/2"> {{ originAddress }}</span>
     </p>
     <p class="flex justify-between m-0">
       <span class="basis-1/2"><i class="pi pi-flag-fill"></i> Destino:</span

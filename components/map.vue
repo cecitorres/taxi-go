@@ -15,6 +15,7 @@ onMounted(async () => {
     container: "map",
     center: [-100.3175, 25.6856],
     zoom: 14, // initial map zoom
+    attributionControl: false,
     style: `https://maps.geo.${region}.amazonaws.com/maps/v0/maps/${mapName}/style-descriptor?key=${apiKey}`,
   });
 

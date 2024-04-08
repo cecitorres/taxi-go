@@ -38,7 +38,6 @@ const getTaxiFare = (distance, duration) => {
     const dayFare = calculateTaxiFare(distance, FARES.DAY.BASE, FARES.DAY.RATE_PER_KM, FARES.DAY.TIME_RATE, duration);
     // Calculate night fare
     const nightFare = calculateTaxiFare(distance, FARES.NIGHT.BASE, FARES.NIGHT.RATE_PER_KM, FARES.NIGHT.TIME_RATE, duration);
-    console.log("getTaxiFare", dayFare, nightFare);
     return [
         dayFare.toFixed(2),
         nightFare.toFixed(2)

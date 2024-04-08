@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import getTranscript from "~/utils/speechRecognition";
 import {
   initializeLocationClient,
@@ -21,6 +21,9 @@ const {
 } = useTaxiFare(client);
 const mapRef = ref(null);
 const showResult = ref(false);
+const startRef = ref();
+const resultRef = ref();
+const showScrollTop = ref(true);
 
 // Calcular coordenadas inicio
 onMounted(async () => {
@@ -46,21 +49,32 @@ const onGetDestinationAddress = async () => {
   // Draw Map
   mapRef.value.drawRoute(routeString.value);
   showResult.value = true;
+  showScrollTop.value = true;
+  await nextTick();
+  resultRef.value.scrollIntoView({ behavior: "smooth" });
+};
+
+const scrollTop = () => {
+  startRef.value.scrollIntoView({ behavior: "smooth" });
+  showScrollTop.value = false;
 };
 </script>
 
 <template>
-  <div
-    class="flex flex-col items-center justify-center w-screen h-screen text-center"
-  >
-    <div class="w-screen" v-show="showResult">
+  <div class="h-full pb-4">
+    <div
+      class="flex flex-col items-center justify-center h-screen"
+      ref="startRef"
+    >
+      <p class="mb-4 text-4xl">¿A dónde?🚕💨</p>
       <Button
         @click="onGetDestinationAddress"
         icon="pi pi-microphone"
         severity="warning"
-        class="m-auto p-button-rounded"
-        label="Nuevo destino"
+        class="mx-auto big p-button-rounded"
       ></Button>
+    </div>
+    <div class="flex flex-col" ref="resultRef" v-show="showResult">
       <div class="my-4">
         <Map ref="mapRef" />
       </div>
@@ -68,17 +82,15 @@ const onGetDestinationAddress = async () => {
       <InfoRide
         origin-address="Mi ubicacion"
         :destination-address="destinationAddress"
-        :distance="distance"
-        :duration="duration"
+        :distance="Number(distance)"
+        :duration="Number(duration)"
       />
-    </div>
-    <div v-show="!showResult">
-      <p class="mb-4 text-4xl">¿A dónde?🚕💨</p>
       <Button
-        @click="onGetDestinationAddress"
-        icon="pi pi-microphone"
-        severity="warning"
-        class="mx-auto big p-button-rounded"
+        @click="scrollTop"
+        severity="secondary"
+        icon="pi pi-angle-double-up"
+        class="!fixed !rounded-full bottom-5 end-5"
+        v-show="showScrollTop"
       ></Button>
     </div>
   </div>
