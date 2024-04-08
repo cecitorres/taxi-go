@@ -42,12 +42,20 @@ export default function (client) {
         }
     };
 
+    const resetValues = () => {
+        input.value = "";
+        suggestionsResult.value = [];
+        suggestionsText.value = [];
+        coordinates.value = [];
+    };
+
     return {
         input,
         suggestionsResult,
         suggestionsText,
         coordinates,
         onSearch,
-        onSelect
+        onSelect,
+        resetValues
     }
 }

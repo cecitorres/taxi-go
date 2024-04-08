@@ -23,7 +23,7 @@ export async function initializeLocationClient() {
             region,
             ...authHelper.getLocationClientConfig(), // sets up the Location client to use the API Key defined above
         });
-        
+
         return client;
     } catch (error) {
         console.error("Error initializing Location client:", error);
@@ -58,8 +58,8 @@ const searchPlaceForText = async (text, client) => {
         const command = new SearchPlaceIndexForTextCommand(input);
 
         const result = await client.send(command);
-
-        return result;
+        const firstResult = result.Results[0].Place;
+        return firstResult;
     } catch (error) {
         console.error("Error searching for place:", error);
         throw error;
@@ -87,8 +87,8 @@ const calculateRoute = async (origin, destination, client) => {
     try {
         const input = {
             CalculatorName: placesName, // required
-            DestinationPosition: destination,
             DeparturePosition: origin,
+            DestinationPosition: destination,
             IncludeLegGeometry: true,
         };
         const command = new CalculateRouteCommand(input);

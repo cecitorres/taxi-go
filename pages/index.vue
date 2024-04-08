@@ -7,6 +7,7 @@ import {
 } from "../services/locationService";
 import { getTaxiFare } from "../services/faresService";
 import convertTime from "../utils/convertTime";
+import getTranscript from "../utils/speechRecognition";
 
 const client = ref();
 const runtimeConfig = useRuntimeConfig();
@@ -27,15 +28,9 @@ const getCurrentLocation = async () => {
   originCoordinates.value = coords;
 };
 
-const resetValues = () => {
-  originInput.value = "";
-  originSuggestionsResult.value = [];
-  originSuggestionsText.value = [];
-  originCoordinates.value = [];
-  destinationInput.value = "";
-  destinationSuggestionsResult.value = [];
-  destinationSuggestionsText.value = [];
-  destinationCoordinates.value = [];
+const resetAddresses = () => {
+  resetOriginValues();
+  resetDestinationValues();
 };
 
 const {
@@ -45,6 +40,7 @@ const {
   coordinates: originCoordinates,
   onSearch: onOriginSearch,
   onSelect: onOriginSelect,
+  resetValues: resetOriginValues,
 } = useAddressInput(client);
 
 const {
@@ -54,6 +50,7 @@ const {
   coordinates: destinationCoordinates,
   onSearch: onDestinationSearch,
   onSelect: onDestinationSelect,
+  resetValues: resetDestinationValues,
 } = useAddressInput(client);
 
 const getRef = (refName) => {
@@ -62,85 +59,36 @@ const getRef = (refName) => {
 
 const searchByVoice = async () => {
   try {
-    const response = await searchPlaceForText(
+    const place = await searchPlaceForText(
       destinationInput.value,
       client.value
     );
-    console.log(response);
-    const firstResult = response.Results[0].Place;
-    destinationCoordinates.value = firstResult.Geometry.Point;
-    destinationInput.value = firstResult.Label;
+    destinationCoordinates.value = place.Geometry.Point;
+    destinationInput.value = place.Label;
   } catch (error) {
     console.error("Error searching for place:", error);
   }
 };
 
-const loading = ref(false);
-const distance = ref(0);
-const duration = ref(0);
-
-const dayFare = ref(0);
-const nightFare = ref(0);
-
 const mapRef = ref(null);
-const calculateFare = async () => {
-  loading.value = true;
-  try {
-    const response = await calculateRoute(
-      originCoordinates.value,
-      destinationCoordinates.value,
-      client.value
-    );
-    distance.value = response.Summary.Distance.toFixed(2);
-    // steps are also available in response
-    duration.value = response.Summary.DurationSeconds.toFixed(2);
+const {
+  loading: loadingTaxiFare,
+  distance,
+  duration,
+  fareCost,
+  routeString,
+  calculateTaxiFare,
+} = useTaxiFare(client);
 
-    const [dayFareCost, nightFareCost] = getTaxiFare(
-      distance.value,
-      duration.value
-    );
-    dayFare.value = dayFareCost;
-    nightFare.value = nightFareCost;
-    // Obtener las coordenadas de la nueva ruta
-    let routes = response.Legs[0].Geometry.LineString;
-
-    mapRef.value.drawRoute(routes);
-  } catch (error) {
-    console.error("Error calculating for route:", error);
-  } finally {
-    loading.value = false;
-  }
+const onCalculateTaxiFare = async () => {
+  await calculateTaxiFare(originCoordinates.value, destinationCoordinates.value);
+  mapRef.value.drawRoute(routeString.value);
 };
-const destinationRef = ref(null);
-const startSpeechRecognition = () => {
-  const autoCompleteComponent = getRef("destinationRef");
 
-  const recognition = new window.webkitSpeechRecognition();
-  recognition.lang = "es-ES";
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    destinationInput.value = transcript;
-    searchByVoice();
-    // // Simular el evento 'complete' con el texto transcrita como consulta
-    // autoCompleteComponent.value.$emit("complete", {
-    //   query: transcript,
-    // });
-    // autoCompleteComponent.value.clicked = true;
-    // autoCompleteComponent.value.focused = true;
-    // // Mostrar sugerencias
-    // autoCompleteComponent.value.overlayVisible = true;
-  };
-
-  recognition.onerror = (event) => {
-    console.error("Error de reconocimiento:", event.error);
-  };
-
-  recognition.onend = () => {
-    console.log("Reconocimiento de voz finalizado");
-  };
-
-  recognition.start();
+const startSpeechRecognition = async () => {
+  const transcript = await getTranscript();
+  destinationInput.value = transcript;
+  searchByVoice();
 };
 </script>
 
@@ -189,7 +137,6 @@ const startSpeechRecognition = () => {
           placeholder="Centro de Guadalupe ..."
           forceSelection
           class="flex-1 mr-2"
-          ref="destinationRef"
         />
         <Button
           @click="startSpeechRecognition"
@@ -199,8 +146,12 @@ const startSpeechRecognition = () => {
       </div>
     </div>
     <div class="flex items-center justify-around">
-      <Button label="Limpiar" @click="resetValues" outlined="" />
-      <Button label="Calcular" @click="calculateFare" :loading="loading" />
+      <Button label="Limpiar" @click="resetAddresses" outlined="" />
+      <Button
+        label="Calcular"
+        @click="onCalculateTaxiFare"
+        :loading="loadingTaxiFare"
+      />
     </div>
     <div class="my-4">
       <Map ref="mapRef" />
@@ -219,10 +170,10 @@ const startSpeechRecognition = () => {
         <i class="pi pi-stopwatch"></i> Duracion: {{ convertTime(duration) }}
       </p>
       <p class="m-0">
-        <i class="pi pi-sun"></i> Durante el dia: ${{ dayFare }}
+        <i class="pi pi-sun"></i> Durante el dia: ${{ fareCost.day }}
       </p>
       <p class="m-0">
-        <i class="pi pi-moon"></i> Durante la noche: ${{ nightFare }}
+        <i class="pi pi-moon"></i> Durante la noche: ${{ fareCost.night }}
       </p>
     </Panel>
   </div>
