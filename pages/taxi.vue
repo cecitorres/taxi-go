@@ -1,3 +1,7 @@
+<script setup>
+
+</script>
+
 <template>
   <div class="flex items-center">
     <!-- <p>Taxi</p> -->

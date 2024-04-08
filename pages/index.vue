@@ -2,9 +2,7 @@
 import { ref, onMounted } from "vue";
 import {
   initializeLocationClient,
-  searchPlaceForSuggestions,
   searchPlaceForText,
-  getPlace,
   calculateRoute,
 } from "../services/locationService";
 import { getTaxiFare } from "../services/faresService";
@@ -12,16 +10,15 @@ import convertTime from "../utils/convertTime";
 import getCurrentPosition from "../utils/location";
 
 const client = ref();
-const mapName = "TaxiGo";
-const region = "us-east-1";
 const runtimeConfig = useRuntimeConfig();
 const apiKey = runtimeConfig.public.AWS_LOCATION_SERVICE_KEY;
+const mapName = runtimeConfig.public.MAP_NAME;
+const region = runtimeConfig.public.AWS_REGION;
 
 const loadingCurrentLocation = ref(false);
 onMounted(async () => {
   //initialize the Location client:
   client.value = await initializeLocationClient();
-  console.log(client.value, 456);
 });
 
 const getCurrentLocation = async () => {
@@ -63,53 +60,18 @@ const {
   suggestionsText: originSuggestionsText,
   coordinates: originCoordinates,
   onSearch: onOriginSearch,
+  onSelect: onOriginSelect,
 } = useAddressInput(client);
 
-const onOriginSelect = async (event) => {
-  try {
-    const placeId = originSuggestionsResult.value.find(
-      (i) => i.Text === event.value
-    ).PlaceId;
-    const response = await getPlace(placeId, client.value);
-    // Procesar placeInfo para obtener las coordenadas
-    originCoordinates.value = response.Place.Geometry.Point;
-  } catch (error) {
-    console.error("Error getting place coordinates:", error);
-    // Manejar errores de obtención de coordenadas del lugar
-  }
-};
+const {
+  input: destinationInput,
+  suggestionsResult: destinationSuggestionsResult,
+  suggestionsText: destinationSuggestionsText,
+  coordinates: destinationCoordinates,
+  onSearch: onDestinationSearch,
+  onSelect: onDestinationSelect,
+} = useAddressInput(client);
 
-const destinationInput = ref("");
-const destinationSuggestionsResult = ref([]);
-const destinationSuggestionsText = ref([]);
-const destinationCoordinates = ref([]);
-
-const destinationSearch = async (event) => {
-  try {
-    const response = await searchPlaceForSuggestions(event.query, client.value);
-    destinationSuggestionsResult.value = response.Results;
-    // Procesar el resultado para obtener las sugerencias de direcciones
-    destinationSuggestionsText.value = destinationSuggestionsResult.value.map(
-      (result) => result.Text
-    );
-  } catch (error) {
-    console.error("Error searching for places:", error);
-  }
-};
-
-const onDestinationSelect = async (event) => {
-  try {
-    const placeId = destinationSuggestionsResult.value.find(
-      (i) => i.Text === event.value
-    ).PlaceId;
-    const response = await getPlace(placeId, client.value);
-    // Procesar placeInfo para obtener las coordenadas
-    destinationCoordinates.value = response.Place.Geometry.Point;
-  } catch (error) {
-    console.error("Error getting place coordinates:", error);
-    // Manejar errores de obtención de coordenadas del lugar
-  }
-};
 const getRef = (refName) => {
   return eval(refName);
 };
@@ -238,7 +200,7 @@ const startSpeechRecognition = () => {
           input-id="destinationInput"
           v-model="destinationInput"
           :suggestions="destinationSuggestionsText"
-          @complete="destinationSearch"
+          @complete="onDestinationSearch"
           @item-select="onDestinationSelect"
           placeholder="Centro de Guadalupe ..."
           forceSelection

@@ -29,11 +29,25 @@ export default function (client) {
         }
     };
 
+    const onSelect = async (event) => {
+        try {
+            const placeId = suggestionsResult.value.find(
+                (i) => i.Text === event.value
+            ).PlaceId;
+            const response = await getPlace(placeId, toValue(client));
+            // Procesar placeInfo para obtener las coordenadas
+            coordinates.value = response.Place.Geometry.Point;
+        } catch (error) {
+            console.error("Error getting place coordinates:", error);
+        }
+    };
+
     return {
         input,
         suggestionsResult,
         suggestionsText,
         coordinates,
-        onSearch
+        onSearch,
+        onSelect
     }
 }
