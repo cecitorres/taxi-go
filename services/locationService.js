@@ -26,8 +26,7 @@ export async function initializeLocationClient() {
 
         return client;
     } catch (error) {
-        console.error("Error initializing Location client:", error);
-        throw error;
+        throw Error("Error en el servidor");
     }
 }
 const NUEVO_LEON_COORDS = [-100.6689, 24.4389, -99.7383, 25.6955];

@@ -31,9 +31,9 @@ const loading = ref(false);
 
 // Calcular coordenadas inicio
 onMounted(async () => {
-  // Initialize the AWS Location client
-  client.value = await initializeLocationClient();
   try {
+    // Initialize the AWS Location client
+    client.value = await initializeLocationClient();
     originCoords.value = await getUserLocation();
   } catch (error) {
     addErrorToast(null, error.message);
@@ -59,7 +59,7 @@ const onGetDestinationAddress = async () => {
 };
 
 watch([originCoords, destinationCoords], async ([origin, destination]) => {
-  if (origin.length > 0 && destination.length > 0) {
+  if (origin?.length > 0 && destination?.length > 0) {
     try {
       // Calcular ruta y costos
       await calculateTaxiFare(originCoords.value, destinationCoords.value);
