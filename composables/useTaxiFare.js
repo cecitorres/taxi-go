@@ -38,7 +38,7 @@ export default function (client) {
             }
             routeString.value = response.Legs[0].Geometry.LineString;
         } catch (error) {
-            throw error;
+            throw Error("Error calculando su ruta");
         } finally {
             loading.value = false;
         }

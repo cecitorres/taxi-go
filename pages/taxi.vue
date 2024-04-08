@@ -61,8 +61,9 @@ const onGetDestinationAddress = async () => {
 watch(
   [originCoords, destinationCoords],
   async ([origin, destination]) => {
-    if (origin?.length > 0 && destination?.length > 0) {
-      try {
+    try {
+      console.log(origin, destination);
+      if (origin.length > 0 && destination.length > 0) {
         // Calcular ruta y costos
         await calculateTaxiFare(originCoords.value, destinationCoords.value);
         // Draw Map
@@ -72,10 +73,10 @@ watch(
         loading.value = false;
         await nextTick();
         resultRef.value.scrollIntoView({ behavior: "smooth" });
-      } catch (error) {
-        loading.value = false;
-        addErrorToast(null, "Intente otra direccion");
       }
+    } catch (error) {
+      loading.value = false;
+      addErrorToast(null, error.message);
     }
   },
   { deep: true }
