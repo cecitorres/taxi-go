@@ -69,7 +69,7 @@ const searchByVoice = async () => {
     console.error("Error searching for place:", error);
   }
 };
-
+const infoRideRef = ref();
 const mapRef = ref(null);
 const {
   loading: loadingTaxiFare,
@@ -81,8 +81,12 @@ const {
 } = useTaxiFare(client);
 
 const onCalculateTaxiFare = async () => {
-  await calculateTaxiFare(originCoordinates.value, destinationCoordinates.value);
+  await calculateTaxiFare(
+    originCoordinates.value,
+    destinationCoordinates.value
+  );
   mapRef.value.drawRoute(routeString.value);
+  infoRideRef.value.scrollIntoView({ behavior: "smooth" });
 };
 
 const startSpeechRecognition = async () => {
@@ -153,28 +157,17 @@ const startSpeechRecognition = async () => {
         :loading="loadingTaxiFare"
       />
     </div>
+  </div>
+  <div class="mt-4" ref="infoRideRef">
     <div class="my-4">
       <Map ref="mapRef" />
     </div>
-  </div>
-
-  <div class="px-8 pt-6 pb-8 mb-4 bg-white rounded shadow-md">
-    <Panel header="Header">
-      <template #header>
-        <p class="font-bold"><i class="pi pi-money-bill"></i> Costo</p>
-      </template>
-      <p class="m-0">
-        <i class="pi pi-map-marker"></i> Distancia: {{ distance }}km
-      </p>
-      <p class="m-0">
-        <i class="pi pi-stopwatch"></i> Duracion: {{ convertTime(duration) }}
-      </p>
-      <p class="m-0">
-        <i class="pi pi-sun"></i> Durante el dia: ${{ fareCost.day }}
-      </p>
-      <p class="m-0">
-        <i class="pi pi-moon"></i> Durante la noche: ${{ fareCost.night }}
-      </p>
-    </Panel>
+    <InfoPrice :fare-cost="fareCost" />
+    <InfoRide
+      :origin-address="originInput"
+      :destination-address="destinationInput"
+      :distance="distance"
+      :duration="duration"
+    />
   </div>
 </template>

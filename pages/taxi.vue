@@ -19,6 +19,8 @@ const {
   routeString,
   calculateTaxiFare,
 } = useTaxiFare(client);
+const mapRef = ref(null);
+const showResult = ref(false);
 
 // Calcular coordenadas inicio
 onMounted(async () => {
@@ -40,34 +42,50 @@ const onGetDestinationAddress = async () => {
 
   // Calcular ruta
   // Calcular costos
-  calculateTaxiFare(originCoords.value, destinationCoords.value);
+  await calculateTaxiFare(originCoords.value, destinationCoords.value);
   // Draw Map
+  mapRef.value.drawRoute(routeString.value);
+  showResult.value = true;
 };
 </script>
 
 <template>
-  <div class="flex flex-col text-center">
-    <!-- <p>Taxi</p> -->
-    <Button
-      @click="onGetDestinationAddress"
-      icon="pi pi-microphone"
-      severity="warning"
-      class="mx-auto p-button-rounded"
-    ></Button>
-    <div class="">
-      {{ destinationAddress }}
+  <div
+    class="flex flex-col items-center justify-center w-screen h-screen text-center"
+  >
+    <div class="w-screen" v-show="showResult">
+      <Button
+        @click="onGetDestinationAddress"
+        icon="pi pi-microphone"
+        severity="warning"
+        class="m-auto p-button-rounded"
+        label="Nuevo destino"
+      ></Button>
+      <div class="my-4">
+        <Map ref="mapRef" />
+      </div>
+      <InfoPrice :fare-cost="fareCost" />
+      <InfoRide
+        origin-address="Mi ubicacion"
+        :destination-address="destinationAddress"
+        :distance="distance"
+        :duration="duration"
+      />
     </div>
-    {{ destinationCoords }}
-    {{ distance }}
-    {{ duration }}
-    {{ fareCost.day }}
-    {{ fareCost.night }}
-    <!-- {{ routeString }} -->
+    <div v-show="!showResult">
+      <p class="mb-4 text-4xl">¿A dónde?🚕💨</p>
+      <Button
+        @click="onGetDestinationAddress"
+        icon="pi pi-microphone"
+        severity="warning"
+        class="mx-auto big p-button-rounded"
+      ></Button>
+    </div>
   </div>
 </template>
 
 <style scoped>
-button {
+button.big {
   min-height: 40vh;
   min-width: 40vh;
   font-size: 8rem;
