@@ -11,7 +11,7 @@ import { getTaxiFare } from "../services/faresService";
 import convertTime from "../utils/convertTime";
 import getCurrentPosition from "../utils/location";
 
-let client;
+const client = ref();
 const mapName = "TaxiGo";
 const region = "us-east-1";
 const runtimeConfig = useRuntimeConfig();
@@ -20,7 +20,8 @@ const apiKey = runtimeConfig.public.AWS_LOCATION_SERVICE_KEY;
 const loadingCurrentLocation = ref(false);
 onMounted(async () => {
   //initialize the Location client:
-  client = await initializeLocationClient();
+  client.value = await initializeLocationClient();
+  console.log(client.value, 456);
 });
 
 const getCurrentLocation = async () => {
@@ -56,30 +57,20 @@ const resetValues = () => {
   destinationCoordinates.value = [];
 };
 
-const originInput = ref("");
-const originSuggestionsResult = ref([]);
-const originSuggestionsText = ref([]);
-const originCoordinates = ref([]);
-
-const onOriginSearch = async (event) => {
-  try {
-    const response = await searchPlaceForSuggestions(event.query, client);
-    originSuggestionsResult.value = response.Results;
-    // Procesar el resultado para obtener las sugerencias de direcciones
-    originSuggestionsText.value = originSuggestionsResult.value.map(
-      (result) => result.Text
-    );
-  } catch (error) {
-    console.error("Error searching for places:", error);
-  }
-};
+const {
+  input: originInput,
+  suggestionsResult: originSuggestionsResult,
+  suggestionsText: originSuggestionsText,
+  coordinates: originCoordinates,
+  onSearch: onOriginSearch,
+} = useAddressInput(client);
 
 const onOriginSelect = async (event) => {
   try {
     const placeId = originSuggestionsResult.value.find(
       (i) => i.Text === event.value
     ).PlaceId;
-    const response = await getPlace(placeId, client);
+    const response = await getPlace(placeId, client.value);
     // Procesar placeInfo para obtener las coordenadas
     originCoordinates.value = response.Place.Geometry.Point;
   } catch (error) {
@@ -95,7 +86,7 @@ const destinationCoordinates = ref([]);
 
 const destinationSearch = async (event) => {
   try {
-    const response = await searchPlaceForSuggestions(event.query, client);
+    const response = await searchPlaceForSuggestions(event.query, client.value);
     destinationSuggestionsResult.value = response.Results;
     // Procesar el resultado para obtener las sugerencias de direcciones
     destinationSuggestionsText.value = destinationSuggestionsResult.value.map(
@@ -111,7 +102,7 @@ const onDestinationSelect = async (event) => {
     const placeId = destinationSuggestionsResult.value.find(
       (i) => i.Text === event.value
     ).PlaceId;
-    const response = await getPlace(placeId, client);
+    const response = await getPlace(placeId, client.value);
     // Procesar placeInfo para obtener las coordenadas
     destinationCoordinates.value = response.Place.Geometry.Point;
   } catch (error) {
@@ -125,7 +116,10 @@ const getRef = (refName) => {
 
 const searchByVoice = async () => {
   try {
-    const response = await searchPlaceForText(destinationInput.value, client);
+    const response = await searchPlaceForText(
+      destinationInput.value,
+      client.value
+    );
     console.log(response);
     const firstResult = response.Results[0].Place;
     destinationCoordinates.value = firstResult.Geometry.Point;
@@ -149,7 +143,7 @@ const calculateFare = async () => {
     const response = await calculateRoute(
       originCoordinates.value,
       destinationCoordinates.value,
-      client
+      client.value
     );
     distance.value = response.Summary.Distance.toFixed(2);
     // steps are also available in response
