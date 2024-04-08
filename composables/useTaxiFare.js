@@ -38,7 +38,7 @@ export default function (client) {
             }
             routeString.value = response.Legs[0].Geometry.LineString;
         } catch (error) {
-            console.error("Error calculating for route:", error);
+            throw error;
         } finally {
             loading.value = false;
         }

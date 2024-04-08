@@ -5,6 +5,9 @@ import {
   initializeLocationClient,
   searchPlaceForText,
 } from "@/services/locationService";
+const { addErrorToast } = useDisplayToast();
+
+const show = () => {};
 
 const client = ref();
 const originCoords = ref([]);
@@ -30,8 +33,11 @@ const loading = ref(false);
 onMounted(async () => {
   // Initialize the AWS Location client
   client.value = await initializeLocationClient();
-  originCoords.value = await getUserLocation();
-  console.log(originCoords.value);
+  try {
+    originCoords.value = await getUserLocation();
+  } catch (error) {
+    addErrorToast(null, error.message);
+  }
 });
 
 const onGetDestinationAddress = async () => {
@@ -48,7 +54,7 @@ const onGetDestinationAddress = async () => {
 
     loading.value = true;
   } catch (error) {
-    console.log(error);
+    addErrorToast(null, "Intente otra direccion");
   }
 };
 
@@ -65,8 +71,8 @@ watch([originCoords, destinationCoords], async ([origin, destination]) => {
       await nextTick();
       resultRef.value.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
-      console.log(error);
       loading.value = false;
+      addErrorToast(null, "Intente otra direccion");
     }
   }
 });
@@ -79,6 +85,8 @@ const scrollTop = () => {
 
 <template>
   <div class="h-full pb-4">
+    <div class="flex"></div>
+    <Toast class="!w-auto" />
     <div
       v-show="loading"
       class="absolute z-10 flex items-center justify-center w-full h-full bg-white bg-opacity-60"

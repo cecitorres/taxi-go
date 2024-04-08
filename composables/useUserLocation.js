@@ -22,12 +22,12 @@ export default function () {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
             } catch (err) {
-                console.log(err);
+                throw Error("Error al obtener tu ubicacion");
             } finally {
                 loading.value = false;
             }
         } else {
-            // TODO: Add toast to show error
+            throw Error("Ubicacion no disponible");
         }
     };
     return {
